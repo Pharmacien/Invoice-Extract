@@ -99,9 +99,7 @@ export function InvoiceDataDisplay({ data, onDeleteInvoice, onDeleteProvider }: 
             </DialogDescription>
           </DialogHeader>
           {selectedInvoice?.pdfDataUri && (
-            <object data={selectedInvoice.pdfDataUri} type="application/pdf" className="w-full h-full">
-              <p>Your browser does not support PDFs. You can <a href={selectedInvoice.pdfDataUri} download>download the PDF</a> instead.</p>
-            </object>
+             <iframe src={selectedInvoice.pdfDataUri} className="w-full h-full" title={`Invoice ${selectedInvoice.invoiceNumber}`} />
           )}
         </DialogContent>
       </Dialog>

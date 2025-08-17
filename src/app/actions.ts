@@ -46,6 +46,20 @@ export async function getExtractedData(): Promise<ExtractInvoiceDataOutput[]> {
 
 export async function appendExtractedData(newData: ExtractInvoiceDataOutput[]): Promise<void> {
   const existingData = await readData();
-  const updatedData = [...existingData, ...newData];
+  const dataMap = new Map<string, ExtractInvoiceDataOutput>();
+
+  // Populate map with existing data
+  existingData.forEach(invoice => {
+    const key = `${invoice.invoiceNumber}-${invoice.invoiceDate}`;
+    dataMap.set(key, invoice);
+  });
+
+  // Add or update with new data
+  newData.forEach(invoice => {
+    const key = `${invoice.invoiceNumber}-${invoice.invoiceDate}`;
+    dataMap.set(key, invoice);
+  });
+
+  const updatedData = Array.from(dataMap.values());
   await writeData(updatedData);
 }

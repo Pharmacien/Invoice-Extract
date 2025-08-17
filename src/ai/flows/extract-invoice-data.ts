@@ -15,7 +15,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import wav from 'wav';
 
 const ExtractInvoiceDataInputSchema = z.object({
   pdfDataUri: z
@@ -26,7 +25,7 @@ const ExtractInvoiceDataInputSchema = z.object({
 });
 export type ExtractInvoiceDataInput = z.infer<typeof ExtractInvoiceDataInputSchema>;
 
-const ExtractInvoiceDataOutputSchema = z.object({
+const ExtractedDataSchema = z.object({
   invoiceNumber: z.string().describe('The invoice number.'),
   invoiceDate: z.string().describe('The date of the invoice.'),
   providerName: z.string().describe('The name of the provider.'),
@@ -35,6 +34,11 @@ const ExtractInvoiceDataOutputSchema = z.object({
   providerEmail: z.string().describe('The email address of the provider.'),
   invoiceValue: z.string().describe('The total value of the invoice.'),
 });
+
+const ExtractInvoiceDataOutputSchema = ExtractedDataSchema.extend({
+    pdfDataUri: z.string().describe("The PDF invoice data as a data URI.")
+});
+
 
 export type ExtractInvoiceDataOutput = z.infer<typeof ExtractInvoiceDataOutputSchema>;
 
@@ -45,7 +49,7 @@ export async function extractInvoiceData(input: ExtractInvoiceDataInput): Promis
 const extractInvoiceDataPrompt = ai.definePrompt({
   name: 'extractInvoiceDataPrompt',
   input: {schema: ExtractInvoiceDataInputSchema},
-  output: {schema: ExtractInvoiceDataOutputSchema},
+  output: {schema: ExtractedDataSchema},
   prompt: `You are an expert data extraction specialist, specializing in invoices written in Slovenian.
 
   Given a PDF invoice, extract the following information:
@@ -72,6 +76,9 @@ const extractInvoiceDataFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await extractInvoiceDataPrompt(input);
-    return output!;
+    return {
+        ...output!,
+        pdfDataUri: input.pdfDataUri
+    };
   }
 );

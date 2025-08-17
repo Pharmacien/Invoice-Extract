@@ -18,6 +18,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { useState } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 
 interface Props {
   data: ExtractInvoiceDataOutput[];
@@ -25,7 +27,7 @@ interface Props {
   onDeleteProvider: (providerName: string) => void;
 }
 
-const dataLabels: Record<keyof Omit<ExtractInvoiceDataOutput, 'providerName'>, string> = {
+const dataLabels: Record<keyof Omit<ExtractInvoiceDataOutput, 'providerName' | 'pdfDataUri'>, string> = {
   invoiceNumber: "Invoice Number",
   invoiceDate: "Invoice Date",
   providerAddress: "Provider Address",
@@ -36,6 +38,7 @@ const dataLabels: Record<keyof Omit<ExtractInvoiceDataOutput, 'providerName'>, s
 
 export function InvoiceDataDisplay({ data, onDeleteInvoice, onDeleteProvider }: Props) {
   const { toast } = useToast();
+  const [selectedInvoice, setSelectedInvoice] = useState<ExtractInvoiceDataOutput | null>(null);
 
   const handleExport = () => {
     try {
@@ -86,85 +89,107 @@ export function InvoiceDataDisplay({ data, onDeleteInvoice, onDeleteProvider }: 
   }
 
   return (
-    <Card className="w-full animate-in fade-in-50 duration-500">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle>Extracted Data</CardTitle>
-        <Button onClick={handleExport} variant="outline" size="sm">
-          <Download className="mr-2 h-4 w-4" />
-          Export All to Excel
-        </Button>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {Object.entries(groupedByProvider).map(([providerName, invoices]) => (
-          <div key={providerName}>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xl font-semibold tracking-tight text-primary">{providerName}</h3>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm">
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete All by {providerName}
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete all invoices for {providerName}.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => onDeleteProvider(providerName)}>Continue</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-            </div>
-            <div className="border rounded-lg">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {Object.values(dataLabels).map((label) => (
-                      <TableHead key={label}>{label}</TableHead>
-                    ))}
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {invoices.map((invoice, index) => (
-                    <TableRow key={index}>
-                      {(Object.keys(dataLabels) as Array<keyof typeof dataLabels>).map((key) => (
-                        <TableCell key={key}>{invoice[key] || "N/A"}</TableCell>
+    <>
+      <Dialog>
+        <DialogContent className="max-w-4xl h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Invoice Viewer</DialogTitle>
+            <DialogDescription>
+              Viewing invoice {selectedInvoice?.invoiceNumber} from {selectedInvoice?.providerName}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedInvoice?.pdfDataUri && (
+            <iframe
+              src={selectedInvoice.pdfDataUri}
+              className="w-full h-full border-0"
+              title={`Invoice ${selectedInvoice.invoiceNumber}`}
+            />
+          )}
+        </DialogContent>
+
+        <Card className="w-full animate-in fade-in-50 duration-500">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle>Extracted Data</CardTitle>
+            <Button onClick={handleExport} variant="outline" size="sm">
+              <Download className="mr-2 h-4 w-4" />
+              Export All to Excel
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {Object.entries(groupedByProvider).map(([providerName, invoices]) => (
+              <div key={providerName}>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xl font-semibold tracking-tight text-primary">{providerName}</h3>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete All by {providerName}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete all invoices for {providerName}.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => onDeleteProvider(providerName)}>Continue</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                </div>
+                <div className="border rounded-lg">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        {Object.values(dataLabels).map((label) => (
+                          <TableHead key={label}>{label}</TableHead>
+                        ))}
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {invoices.map((invoice, index) => (
+                        <DialogTrigger asChild key={index} onClick={() => setSelectedInvoice(invoice)}>
+                          <TableRow className="cursor-pointer">
+                            {(Object.keys(dataLabels) as Array<keyof typeof dataLabels>).map((key) => (
+                              <TableCell key={key}>{invoice[key] || "N/A"}</TableCell>
+                            ))}
+                            <TableCell className="text-right">
+                              <AlertDialog onOpenChange={e => e.stopPropagation()} >
+                              <AlertDialogTrigger asChild onClick={e => e.stopPropagation()}>
+                                <Button variant="ghost" size="icon">
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent onClick={e => e.stopPropagation()}>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action will permanently delete the invoice {invoice.invoiceNumber}.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => onDeleteInvoice(invoice.invoiceNumber, invoice.invoiceDate)}>Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </TableCell>
+                          </TableRow>
+                        </DialogTrigger>
                       ))}
-                      <TableCell className="text-right">
-                         <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action will permanently delete the invoice {invoice.invoiceNumber}.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => onDeleteInvoice(invoice.invoiceNumber, invoice.invoiceDate)}>Delete</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </Dialog>
+    </>
   );
 }

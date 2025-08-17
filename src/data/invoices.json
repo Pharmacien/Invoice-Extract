@@ -1,59 +1,5 @@
 [
   {
-    "invoiceDate": "26-08-24",
-    "invoiceNumber": "LJUR900397046",
-    "invoiceValue": "168,07",
-    "providerAddress": "Špruha 19\n1236 Trzin",
-    "providerEmail": "si.exp.reklamacije@dhl.com",
-    "providerName": "DHL Ekspres (Slovenija), d.o.o.",
-    "providerPhone": "+386 1 588 7857"
-  },
-  {
-    "invoiceDate": "16-09-24",
-    "invoiceNumber": "LJUR900402114",
-    "invoiceValue": "165,94",
-    "providerAddress": "Špruha 19\n1236 Trzin",
-    "providerEmail": "si.exp.reklamacije@dhl.com",
-    "providerName": "DHL Ekspres (Slovenija), d.o.o.",
-    "providerPhone": "+386 1 588 7857"
-  },
-  {
-    "invoiceDate": "27-09-24",
-    "invoiceNumber": "LJUR900404215",
-    "invoiceValue": "160,94",
-    "providerAddress": "Špruha 19\n1236 Trzin",
-    "providerEmail": "si.exp.reklamacije@dhl.com",
-    "providerName": "DHL Ekspres (Slovenija), d.o.o.",
-    "providerPhone": "+386 1 588 7857"
-  },
-  {
-    "invoiceDate": "26-08-24",
-    "invoiceNumber": "LJUR900397046",
-    "invoiceValue": "168,07",
-    "providerAddress": "Špruha 19\n1236 Trzin",
-    "providerEmail": "si.exp.reklamacije@dhl.com",
-    "providerName": "DHL Ekspres (Slovenija), d.o.o.",
-    "providerPhone": "+386 1 588 7857"
-  },
-  {
-    "invoiceDate": "16-09-24",
-    "invoiceNumber": "LJUR900402114",
-    "invoiceValue": "165,94",
-    "providerAddress": "Špruha 19\n1236 Trzin",
-    "providerEmail": "si.exp.reklamacije@dhl.com",
-    "providerName": "DHL Ekspres (Slovenija), d.o.o.",
-    "providerPhone": "+386 1 588 7857"
-  },
-  {
-    "invoiceDate": "27-09-24",
-    "invoiceNumber": "LJUR900404215",
-    "invoiceValue": "160,94",
-    "providerAddress": "Špruha 19\n1236 Trzin",
-    "providerEmail": "si.exp.reklamacije@dhl.com",
-    "providerName": "DHL Ekspres (Slovenija), d.o.o.",
-    "providerPhone": "+386 1 588 7857"
-  },
-  {
     "invoiceDate": "30.09.2024",
     "invoiceNumber": "24-1820",
     "invoiceValue": "316,84",

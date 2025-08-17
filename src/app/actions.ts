@@ -63,3 +63,25 @@ export async function appendExtractedData(newData: ExtractInvoiceDataOutput[]): 
   const updatedData = Array.from(dataMap.values());
   await writeData(updatedData);
 }
+
+export async function deleteInvoice(invoiceNumber: string, invoiceDate: string): Promise<void> {
+  let data = await readData();
+  data = data.filter(
+    invoice =>
+      !(
+        invoice.invoiceNumber === invoiceNumber &&
+        invoice.invoiceDate === invoiceDate
+      )
+  );
+  await writeData(data);
+}
+
+export async function deleteInvoicesByProvider(providerName: string): Promise<void> {
+  let data = await readData();
+  data = data.filter(invoice => invoice.providerName !== providerName);
+  await writeData(data);
+}
+
+export async function deleteAllData(): Promise<void> {
+  await writeData([]);
+}

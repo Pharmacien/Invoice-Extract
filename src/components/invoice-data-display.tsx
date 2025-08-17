@@ -5,11 +5,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { exportToExcel } from '@/lib/excel';
-import { Download } from 'lucide-react';
+import { Download, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface Props {
   data: ExtractInvoiceDataOutput[];
+  onDeleteInvoice: (invoiceNumber: string, invoiceDate: string) => void;
+  onDeleteProvider: (providerName: string) => void;
 }
 
 const dataLabels: Record<keyof Omit<ExtractInvoiceDataOutput, 'providerName'>, string> = {
@@ -21,7 +34,7 @@ const dataLabels: Record<keyof Omit<ExtractInvoiceDataOutput, 'providerName'>, s
   invoiceValue: "Invoice Value"
 };
 
-export function InvoiceDataDisplay({ data }: Props) {
+export function InvoiceDataDisplay({ data, onDeleteInvoice, onDeleteProvider }: Props) {
   const { toast } = useToast();
 
   const handleExport = () => {
@@ -35,6 +48,10 @@ export function InvoiceDataDisplay({ data }: Props) {
         return;
       }
       exportToExcel(data);
+       toast({
+        title: "Export Successful",
+        description: "Your data has been exported to Excel.",
+      });
     } catch (error) {
       console.error("Failed to export to Excel:", error);
        toast({
@@ -80,7 +97,29 @@ export function InvoiceDataDisplay({ data }: Props) {
       <CardContent className="space-y-6">
         {Object.entries(groupedByProvider).map(([providerName, invoices]) => (
           <div key={providerName}>
-            <h3 className="text-xl font-semibold tracking-tight text-primary mb-2">{providerName}</h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xl font-semibold tracking-tight text-primary">{providerName}</h3>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete All by {providerName}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete all invoices for {providerName}.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => onDeleteProvider(providerName)}>Continue</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+            </div>
             <div className="border rounded-lg">
               <Table>
                 <TableHeader>
@@ -88,6 +127,7 @@ export function InvoiceDataDisplay({ data }: Props) {
                     {Object.values(dataLabels).map((label) => (
                       <TableHead key={label}>{label}</TableHead>
                     ))}
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -96,6 +136,27 @@ export function InvoiceDataDisplay({ data }: Props) {
                       {(Object.keys(dataLabels) as Array<keyof typeof dataLabels>).map((key) => (
                         <TableCell key={key}>{invoice[key] || "N/A"}</TableCell>
                       ))}
+                      <TableCell className="text-right">
+                         <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action will permanently delete the invoice {invoice.invoiceNumber}.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => onDeleteInvoice(invoice.invoiceNumber, invoice.invoiceDate)}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

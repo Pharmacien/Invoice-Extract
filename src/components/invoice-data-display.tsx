@@ -6,15 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { exportToExcel } from '@/lib/excel';
 import { Download } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface Props {
   data: ExtractInvoiceDataOutput[];
 }
 
-const dataLabels: Record<keyof ExtractInvoiceDataOutput, string> = {
+const dataLabels: Record<keyof Omit<ExtractInvoiceDataOutput, 'providerName'>, string> = {
   invoiceNumber: "Invoice Number",
   invoiceDate: "Invoice Date",
-  providerName: "Provider Name",
   providerAddress: "Provider Address",
   providerPhone: "Provider Phone",
   providerEmail: "Provider Email",
@@ -22,13 +22,51 @@ const dataLabels: Record<keyof ExtractInvoiceDataOutput, string> = {
 };
 
 export function InvoiceDataDisplay({ data }: Props) {
+  const { toast } = useToast();
+
   const handleExport = () => {
     try {
+      if (data.length === 0) {
+        toast({
+          variant: "destructive",
+          title: "No Data to Export",
+          description: "There is no extracted data to export to Excel.",
+        });
+        return;
+      }
       exportToExcel(data);
     } catch (error) {
       console.error("Failed to export to Excel:", error);
+       toast({
+          variant: "destructive",
+          title: "Export Failed",
+          description: "There was a problem exporting your data to Excel.",
+        });
     }
   };
+
+  const groupedByProvider = data.reduce((acc, invoice) => {
+    const provider = invoice.providerName || 'Unknown Provider';
+    if (!acc[provider]) {
+      acc[provider] = [];
+    }
+    acc[provider].push(invoice);
+    return acc;
+  }, {} as Record<string, ExtractInvoiceDataOutput[]>);
+
+
+  if (data.length === 0) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Extracted Data</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">No data has been extracted yet. Upload some invoices to get started.</p>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card className="w-full animate-in fade-in-50 duration-500">
@@ -36,28 +74,35 @@ export function InvoiceDataDisplay({ data }: Props) {
         <CardTitle>Extracted Data</CardTitle>
         <Button onClick={handleExport} variant="outline" size="sm">
           <Download className="mr-2 h-4 w-4" />
-          Export to Excel
+          Export All to Excel
         </Button>
       </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {Object.values(dataLabels).map((label) => (
-                <TableHead key={label}>{label}</TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((invoice, index) => (
-              <TableRow key={index}>
-                {(Object.keys(dataLabels) as Array<keyof ExtractInvoiceDataOutput>).map((key) => (
-                  <TableCell key={key}>{invoice[key] || "N/A"}</TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <CardContent className="space-y-6">
+        {Object.entries(groupedByProvider).map(([providerName, invoices]) => (
+          <div key={providerName}>
+            <h3 className="text-xl font-semibold tracking-tight text-primary mb-2">{providerName}</h3>
+            <div className="border rounded-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    {Object.values(dataLabels).map((label) => (
+                      <TableHead key={label}>{label}</TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {invoices.map((invoice, index) => (
+                    <TableRow key={index}>
+                      {(Object.keys(dataLabels) as Array<keyof typeof dataLabels>).map((key) => (
+                        <TableCell key={key}>{invoice[key] || "N/A"}</TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        ))}
       </CardContent>
     </Card>
   );

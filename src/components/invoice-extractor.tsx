@@ -1,16 +1,17 @@
 "use client";
 
 import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import { extractInvoiceData, type ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
+import { appendExtractedData } from '@/app/actions';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { FileUp, Loader2, AlertCircle } from 'lucide-react';
-import { InvoiceDataDisplay } from './invoice-data-display';
-import { InvoiceDataSkeleton } from './invoice-data-skeleton';
+import { FileUp, Loader2, AlertCircle, FileText } from 'lucide-react';
+import Link from 'next/link';
 
 const toDataURL = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -22,10 +23,10 @@ const toDataURL = (file: File): Promise<string> =>
 
 export function InvoiceExtractor() {
   const [files, setFiles] = useState<File[] | null>(null);
-  const [extractedData, setExtractedData] = useState<ExtractInvoiceDataOutput[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const router = useRouter();
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = event.target.files;
@@ -52,7 +53,6 @@ export function InvoiceExtractor() {
       } else {
         setFiles(newFiles);
         setError(null);
-        setExtractedData(null);
       }
     }
   };
@@ -66,7 +66,6 @@ export function InvoiceExtractor() {
 
     setIsLoading(true);
     setError(null);
-    setExtractedData(null);
 
     try {
       const results = await Promise.all(
@@ -88,7 +87,7 @@ export function InvoiceExtractor() {
         throw new Error("No data could be extracted from the provided files.");
       }
 
-      setExtractedData(successfulResults);
+      await appendExtractedData(successfulResults);
 
       if (successfulResults.length < files.length) {
          toast({
@@ -97,6 +96,8 @@ export function InvoiceExtractor() {
           description: `Could not process all files. Extracted data from ${successfulResults.length} of ${files.length} files.`,
         });
       }
+
+      router.push('/extracted-data');
 
     } catch (e) {
       console.error(e);
@@ -154,10 +155,15 @@ export function InvoiceExtractor() {
             </Button>
           </form>
         </CardContent>
+        <CardFooter>
+            <Button variant="outline" asChild>
+                <Link href="/extracted-data">
+                    <FileText className="mr-2 h-4 w-4" />
+                    View All Extracted Data
+                </Link>
+            </Button>
+        </CardFooter>
       </Card>
-
-      {isLoading && <InvoiceDataSkeleton />}
-      {extractedData && extractedData.length > 0 && <InvoiceDataDisplay data={extractedData} />}
     </div>
   );
 }

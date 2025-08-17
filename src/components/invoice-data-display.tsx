@@ -8,7 +8,7 @@ import { exportToExcel } from '@/lib/excel';
 import { Download } from 'lucide-react';
 
 interface Props {
-  data: ExtractInvoiceDataOutput;
+  data: ExtractInvoiceDataOutput[];
 }
 
 const dataLabels: Record<keyof ExtractInvoiceDataOutput, string> = {
@@ -43,15 +43,17 @@ export function InvoiceDataDisplay({ data }: Props) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[200px]">Field</TableHead>
-              <TableHead>Value</TableHead>
+              {Object.values(dataLabels).map((label) => (
+                <TableHead key={label}>{label}</TableHead>
+              ))}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {(Object.keys(dataLabels) as Array<keyof ExtractInvoiceDataOutput>).map((key) => (
-              <TableRow key={key}>
-                <TableCell className="font-medium">{dataLabels[key]}</TableCell>
-                <TableCell>{data[key] || "N/A"}</TableCell>
+            {data.map((invoice, index) => (
+              <TableRow key={index}>
+                {(Object.keys(dataLabels) as Array<keyof ExtractInvoiceDataOutput>).map((key) => (
+                  <TableCell key={key}>{invoice[key] || "N/A"}</TableCell>
+                ))}
               </TableRow>
             ))}
           </TableBody>

@@ -3,28 +3,48 @@
 import type { ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 import * as XLSX from 'xlsx';
 
-export const exportToExcel = (data: ExtractInvoiceDataOutput, fileName?: string) => {
+export const exportToExcel = (data: ExtractInvoiceDataOutput[], fileName?: string) => {
+  const header = [
+    'Invoice Number',
+    'Invoice Date',
+    'Provider Name',
+    'Provider Address',
+    'Provider Phone',
+    'Provider Email',
+    'Invoice Value',
+  ];
+
   const worksheetData = [
-    ["Field", "Value"],
-    ['Invoice Number', data.invoiceNumber],
-    ['Invoice Date', data.invoiceDate],
-    ['Provider Name', data.providerName],
-    ['Provider Address', data.providerAddress],
-    ['Provider Phone', data.providerPhone],
-    ['Provider Email', data.providerEmail],
-    ['Invoice Value', data.invoiceValue],
+    header,
+    ...data.map(invoice => [
+      invoice.invoiceNumber,
+      invoice.invoiceDate,
+      invoice.providerName,
+      invoice.providerAddress,
+      invoice.providerPhone,
+      invoice.providerEmail,
+      invoice.invoiceValue,
+    ]),
   ];
 
   const ws = XLSX.utils.aoa_to_sheet(worksheetData);
 
   // Set column widths for better readability
-  ws['!cols'] = [{ wch: 20 }, { wch: 50 }];
+  ws['!cols'] = [
+    { wch: 20 }, 
+    { wch: 20 }, 
+    { wch: 30 }, 
+    { wch: 50 }, 
+    { wch: 20 }, 
+    { wch: 30 }, 
+    { wch: 20 }
+  ];
 
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Invoice Data");
+  XLSX.utils.book_append_sheet(wb, ws, "Invoices Data");
 
   // Generate a filename
-  const finalFileName = fileName || `invoice-${data.invoiceNumber || 'data'}.xlsx`;
+  const finalFileName = fileName || `invoices-data-${new Date().toISOString().split('T')[0]}.xlsx`;
 
   // Trigger the download
   XLSX.writeFile(wb, finalFileName);

@@ -21,37 +21,46 @@ const toDataURL = (file: File): Promise<string> =>
   });
 
 export function InvoiceExtractor() {
-  const [file, setFile] = useState<File | null>(null);
-  const [extractedData, setExtractedData] = useState<ExtractInvoiceDataOutput | null>(null);
+  const [files, setFiles] = useState<File[] | null>(null);
+  const [extractedData, setExtractedData] = useState<ExtractInvoiceDataOutput[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = event.target.files?.[0];
-    if (selectedFile) {
-      if (selectedFile.type !== 'application/pdf') {
-        setError("Please upload a PDF file.");
-        toast({ variant: "destructive", title: "Invalid File Type", description: "Only PDF files are accepted." });
-        setFile(null);
-        return;
+    const selectedFiles = event.target.files;
+    if (selectedFiles) {
+      const newFiles = Array.from(selectedFiles);
+      let hasError = false;
+      for (const file of newFiles) {
+        if (file.type !== 'application/pdf') {
+          setError("Please upload PDF files only.");
+          toast({ variant: "destructive", title: "Invalid File Type", description: "Only PDF files are accepted." });
+          hasError = true;
+          break;
+        }
+        if (file.size > 5 * 1024 * 1024) { // 5MB limit
+          setError("File size should not exceed 5MB.");
+          toast({ variant: "destructive", title: "File Too Large", description: `File ${file.name} exceeds 5MB.` });
+          hasError = true;
+          break;
+        }
       }
-      if (selectedFile.size > 5 * 1024 * 1024) { // 5MB limit
-        setError("File size should not exceed 5MB.");
-        toast({ variant: "destructive", title: "File Too Large", description: "Please upload a file smaller than 5MB." });
-        setFile(null);
-        return;
+
+      if (hasError) {
+        setFiles(null);
+      } else {
+        setFiles(newFiles);
+        setError(null);
+        setExtractedData(null);
       }
-      setFile(selectedFile);
-      setError(null);
-      setExtractedData(null);
     }
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!file) {
-      setError("Please select a file to upload.");
+    if (!files || files.length === 0) {
+      setError("Please select one or more files to upload.");
       return;
     }
 
@@ -60,9 +69,35 @@ export function InvoiceExtractor() {
     setExtractedData(null);
 
     try {
-      const pdfDataUri = await toDataURL(file);
-      const result = await extractInvoiceData({ pdfDataUri });
-      setExtractedData(result);
+      const results = await Promise.all(
+        files.map(async (file) => {
+          const pdfDataUri = await toDataURL(file);
+          try {
+            return await extractInvoiceData({ pdfDataUri });
+          } catch (e) {
+            console.error(`Error processing ${file.name}:`, e);
+            // Return a partial result or null to indicate failure for this file
+            return null;
+          }
+        })
+      );
+      
+      const successfulResults = results.filter(result => result !== null) as ExtractInvoiceDataOutput[];
+      
+      if (successfulResults.length === 0) {
+        throw new Error("No data could be extracted from the provided files.");
+      }
+
+      setExtractedData(successfulResults);
+
+      if (successfulResults.length < files.length) {
+         toast({
+          variant: "destructive",
+          title: "Partial Extraction",
+          description: `Could not process all files. Extracted data from ${successfulResults.length} of ${files.length} files.`,
+        });
+      }
+
     } catch (e) {
       console.error(e);
       const errorMessage = e instanceof Error ? e.message : "An unknown error occurred.";
@@ -70,7 +105,7 @@ export function InvoiceExtractor() {
       toast({
         variant: "destructive",
         title: "Extraction Failed",
-        description: "There was a problem processing your invoice. Please try again.",
+        description: "There was a problem processing your invoices. Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -81,29 +116,30 @@ export function InvoiceExtractor() {
     <div className="space-y-8">
       <Card>
         <CardHeader>
-          <CardTitle>Upload Invoice</CardTitle>
-          <CardDescription>Select a PDF invoice file (max 5MB) to extract its data.</CardDescription>
+          <CardTitle>Upload Invoices</CardTitle>
+          <CardDescription>Select one or more PDF invoice files (max 5MB each) to extract data.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid w-full max-w-lg items-center gap-1.5">
-              <Label htmlFor="invoice-pdf">PDF File</Label>
-              <Input 
-                id="invoice-pdf" 
-                type="file" 
-                accept=".pdf" 
-                onChange={handleFileChange} 
+              <Label htmlFor="invoice-pdf">PDF Files</Label>
+              <Input
+                id="invoice-pdf"
+                type="file"
+                accept=".pdf"
+                multiple
+                onChange={handleFileChange}
                 className="file:text-sm file:font-semibold file:text-primary file:bg-primary-foreground hover:file:bg-accent/10"
               />
             </div>
-            {error && !file && (
+            {error && (!files || files.length === 0) && (
               <Alert variant="destructive" className="max-w-lg">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Error</AlertTitle>
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            <Button type="submit" disabled={isLoading || !file} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+            <Button type="submit" disabled={isLoading || !files || files.length === 0} className="bg-accent hover:bg-accent/90 text-accent-foreground">
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -121,7 +157,7 @@ export function InvoiceExtractor() {
       </Card>
 
       {isLoading && <InvoiceDataSkeleton />}
-      {extractedData && <InvoiceDataDisplay data={extractedData} />}
+      {extractedData && extractedData.length > 0 && <InvoiceDataDisplay data={extractedData} />}
     </div>
   );
 }

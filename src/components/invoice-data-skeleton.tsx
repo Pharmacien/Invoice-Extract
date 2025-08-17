@@ -13,23 +13,21 @@ export function InvoiceDataSkeleton() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[200px]">
-                <Skeleton className="h-5 w-20" />
-              </TableHead>
-              <TableHead>
-                <Skeleton className="h-5 w-20" />
-              </TableHead>
+              {Array.from({ length: 7 }).map((_, i) => (
+                <TableHead key={i}>
+                  <Skeleton className="h-5 w-24" />
+                </TableHead>
+              ))}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {Array.from({ length: 7 }).map((_, i) => (
+            {Array.from({ length: 3 }).map((_, i) => (
               <TableRow key={i}>
-                <TableCell>
-                  <Skeleton className="h-5 w-32" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-5 w-4/5" />
-                </TableCell>
+                {Array.from({ length: 7 }).map((_, j) => (
+                  <TableCell key={j}>
+                    <Skeleton className="h-5 w-full" />
+                  </TableCell>
+                ))}
               </TableRow>
             ))}
           </TableBody>

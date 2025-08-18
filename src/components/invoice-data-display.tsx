@@ -3,7 +3,7 @@
 import type { ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { exportToExcel } from '@/lib/excel';
 import { Download, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -79,7 +79,7 @@ export function InvoiceDataDisplay({ data, onDeleteInvoice, onDeleteProvider }: 
     return (
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>Extracted Data</CardTitle>
+          <CardTitle>Extracted Data by Provider</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">No data has been extracted yet. Upload some invoices to get started.</p>
@@ -106,14 +106,20 @@ export function InvoiceDataDisplay({ data, onDeleteInvoice, onDeleteProvider }: 
       
       <Card className="w-full animate-in fade-in-50 duration-500">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle>Extracted Data</CardTitle>
+          <CardTitle>Extracted Data by Provider</CardTitle>
           <Button onClick={handleExport} variant="outline" size="sm">
             <Download className="mr-2 h-4 w-4" />
             Export All to Excel
           </Button>
         </CardHeader>
         <CardContent className="space-y-6">
-          {Object.entries(groupedByProvider).map(([providerName, invoices]) => (
+          {Object.entries(groupedByProvider).map(([providerName, invoices]) => {
+             const totalValue = invoices.reduce((sum, invoice) => {
+                const value = parseFloat(invoice.invoiceValue.replace(',', '.').replace(/[^0-9.-]+/g,""));
+                return sum + (isNaN(value) ? 0 : value);
+            }, 0);
+
+            return (
             <div key={providerName}>
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-xl font-semibold tracking-tight text-primary">{providerName}</h3>
@@ -152,7 +158,7 @@ export function InvoiceDataDisplay({ data, onDeleteInvoice, onDeleteProvider }: 
                     {invoices.map((invoice, index) => (
                       <TableRow key={index} onClick={() => setSelectedInvoice(invoice)} className="cursor-pointer">
                         {(Object.keys(dataLabels) as Array<keyof typeof dataLabels>).map((key) => (
-                          <TableCell key={key}>{invoice[key] || "N/A"}</TableCell>
+                          <TableCell key={key} className={key === 'invoiceValue' ? 'text-right' : ''}>{invoice[key] || "N/A"}</TableCell>
                         ))}
                         <TableCell className="text-right">
                           <AlertDialog onOpenChange={e => e.stopPropagation()} >
@@ -178,10 +184,17 @@ export function InvoiceDataDisplay({ data, onDeleteInvoice, onDeleteProvider }: 
                       </TableRow>
                     ))}
                   </TableBody>
+                  <TableFooter>
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-right font-bold text-primary">Total</TableCell>
+                      <TableCell className="text-right font-bold text-primary">{totalValue.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell />
+                    </TableRow>
+                  </TableFooter>
                 </Table>
               </div>
             </div>
-          ))}
+          )})}
         </CardContent>
       </Card>
     </>

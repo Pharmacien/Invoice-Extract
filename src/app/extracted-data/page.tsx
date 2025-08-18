@@ -7,7 +7,7 @@ import type { ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 import { getExtractedData, deleteInvoice, deleteInvoicesByProvider, deleteAllData } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, Trash2, View } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -92,26 +92,34 @@ export default function ExtractedDataPage() {
               Back to Upload
             </Link>
           </Button>
-          <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" disabled={!data || data.length === 0}>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Reset All Data
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete all extracted invoice data.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDeleteAll}>Continue</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/all-invoices">
+                <View className="mr-2 h-4 w-4" />
+                View All (Sorted by Date)
+              </Link>
+            </Button>
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" disabled={!data || data.length === 0}>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Reset All Data
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete all extracted invoice data.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteAll}>Continue</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+          </div>
         </div>
         
         {isLoading && <InvoiceDataSkeleton />}

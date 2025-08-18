@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { FileUp, Loader2, AlertCircle, FileText } from 'lucide-react';
+import { FileUp, Loader2, AlertCircle, FileText, View } from 'lucide-react';
 import Link from 'next/link';
 
 const toDataURL = (file: File): Promise<string> =>
@@ -156,12 +156,20 @@ export function InvoiceExtractor() {
           </form>
         </CardContent>
         <CardFooter>
-            <Button variant="outline" asChild>
-                <Link href="/extracted-data">
-                    <FileText className="mr-2 h-4 w-4" />
-                    View All Extracted Data
-                </Link>
-            </Button>
+            <div className="flex gap-2">
+                <Button variant="outline" asChild>
+                    <Link href="/extracted-data">
+                        <FileText className="mr-2 h-4 w-4" />
+                        View by Provider
+                    </Link>
+                </Button>
+                <Button variant="outline" asChild>
+                    <Link href="/all-invoices">
+                        <View className="mr-2 h-4 w-4" />
+                        View All
+                    </Link>
+                </Button>
+            </div>
         </CardFooter>
       </Card>
     </div>

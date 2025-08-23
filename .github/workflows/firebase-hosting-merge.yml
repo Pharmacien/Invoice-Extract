@@ -13,8 +13,10 @@ jobs:
       - uses: actions/checkout@v4
       - run: npm ci && npm run build
       - uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_INVOICE_XTRACT }}
-          channelId: live
-          projectId: invoice-xtract
+  with:
+    repoToken: "${{ secrets.GITHUB_TOKEN }}"
+    firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_INVOICE_XTRACT }}"
+    channelId: live
+    projectId: invoice-xtract
+  env:
+    FIREBASE_CLI_EXPERIMENTS: webframeworks

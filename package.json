@@ -7,9 +7,9 @@
     "genkit:dev": "genkit start",
     "genkit:watch": "genkit start --watch",
     "build": "next build",
-    "gcp-build": "next build",
     "start": "next start",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "gcp-build": "next build"
   },
   "dependencies": {
     "@dataconnect/generated": "file:dataconnect-generated/js/example-connector",

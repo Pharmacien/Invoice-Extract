@@ -9,4 +9,4 @@ schema:
       cloudSql:
         instanceId: "studio-fdc"
       # schemaValidation: "COMPATIBLE"
-connectorDirs: ["./connector"]
+connectorDirs: ["./example"]
